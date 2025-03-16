@@ -7,6 +7,9 @@ from gtts import gTTS
 import base64
 from streamlit_session_browser_storage import SessionStorage
 
+# 전역변수
+GPT_SYSTEM_COMMAND = "You are a thoughtful assistant. Respond to all input in a fun way and answer in Korean. Never use emojis in your response, or things like :)."
+
 
 # 기능 구현 함수
 def stt(audio, apikey):
@@ -61,19 +64,17 @@ def tts(response):
 def clear():
     st.session_state["chat"] = []
     st.session_state["messages"] = [{"role": "system",
-                                     "content": "You are a thoughtful assistant. Respond to all input in a fun way and answer in Korean. Never use emojis in your response."}]
+                                     "content": GPT_SYSTEM_COMMAND}]
     st.session_state["check_reset"] = True
     st.session_state["text_question"] = ""
     st.session_state["current_question"] = ""
 
+
 # 메인 함수
 def main():
-    initial_api_key = ""
-    audio = None
-    print("Main run")
-    # print()
-    # for k in st.session_state:
-    #     print(k, ":", st.session_state[k])
+    # initial_api_key = ""
+    # audio = None
+
     session_storage = SessionStorage()
     # 기본 설정 시작------------------------------
     st.set_page_config(
@@ -106,13 +107,11 @@ def main():
         st.session_state["OPENAI_API"] = initial_api_key if initial_api_key is not None else ""
     if "messages" not in st.session_state:
         st.session_state["messages"] = [{"role": "system",
-                                         "content": "You are a thoughtful assistant. Respond to all input in a fun way and answer in Korean. Never use emojis in your response."}]
+                                         "content": GPT_SYSTEM_COMMAND}]
     if "check_reset" not in st.session_state:
         st.session_state["check_reset"] = False
     if "current_question" not in st.session_state:
         st.session_state["current_question"] = ""
-    # if "audio" not in st.session_state:
-    #     st.session_state["audio"] = None
     # 상태 저장 session_state 끝------------------------------
 
     # 사이드 바 시작------------------------------
@@ -136,6 +135,10 @@ def main():
         st.markdown("---")
 
         model = st.radio(label="GPT 모델", options=["gpt-4o-mini", "gpt-3.5-turbo"], on_change=clear)
+        st.markdown("\n")
+        tts_yn = st.radio(label="GPT 목소리", options=["On", "Off"], on_change=clear)
+        st.markdown("\n")
+        st.caption("*현재 버전에서는 옵션을 변경 시 히스토리가 초기화 됩니다.")
 
         st.markdown("---")
 
@@ -143,10 +146,9 @@ def main():
             clear()
             st.session_state["chat"] = []
             st.session_state["messages"] = [{"role": "system",
-                                             "content": "You are a thoughtful assistant. Respond to all input in a fun way and answer in Korean. Never use emojis in your response."}]
+                                             "content": GPT_SYSTEM_COMMAND}]
             st.session_state["check_reset"] = True
             st.session_state["text_question"] = ""
-            # audio = None
 
     col1, col2 = st.columns(2)
     with col1:
@@ -168,8 +170,6 @@ def main():
         with st.container(border=True):
             st.write("음성으로 GPT에게 질문하기")
             audio = audiorecorder("🎙️ 질문하기", "❤️ 질문 완료하기", "녹음중...")
-            print(audio.duration_seconds, "!!!!!!")
-            # st.session_state["audio"] = audio
 
             if st.session_state["check_reset"]:
                 audio = audio.empty()
@@ -206,12 +206,9 @@ def main():
                         unsafe_allow_html=True)
                     st.write("")
 
-            tts(response)
+            if tts_yn == "On":
+                tts(response)
 
-
-    print()
-    for k in st.session_state:
-        print(k, ":", st.session_state[k])
     # 사이드 바 끝------------------------------
 
 
